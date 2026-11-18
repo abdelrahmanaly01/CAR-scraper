@@ -19,6 +19,9 @@ BG = "#f3f6fa"
 INK = "#172c42"
 MUTED = "#65758a"
 ACCENT = "#16785b"
+LINE = "#e2e9ef"
+CARD = "#ffffff"
+MAX_CONTENT_WIDTH = 960
 
 
 class CarApp:
@@ -51,7 +54,7 @@ class CarApp:
         self.closing = False
         self.candidates = []
         root.title("CAR | Property Finder")
-        root.geometry("640x740+80+30")
+        root.geometry("760x820+80+30")
         root.minsize(420, 300)
         if os.name == "nt":
             root.state("zoomed")
@@ -59,12 +62,23 @@ class CarApp:
         root.protocol("WM_DELETE_WINDOW", self.close)
         style = ttk.Style(root)
         style.theme_use("clam")
-        style.configure("TEntry", padding=11, font=("Segoe UI", 12))
-        style.configure("Primary.TButton", font=("Segoe UI Semibold", 11), padding=12,
+        style.configure("TEntry", padding=11, font=("Segoe UI", 12),
+                        fieldbackground="white", bordercolor=LINE, lightcolor=LINE,
+                        darkcolor=LINE)
+        style.map("TEntry", bordercolor=[("focus", ACCENT)],
+                  lightcolor=[("focus", ACCENT)], darkcolor=[("focus", ACCENT)])
+        style.configure("TCombobox", padding=9, font=("Segoe UI", 10),
+                        fieldbackground="white", background="white", bordercolor=LINE)
+        style.map("TCombobox", fieldbackground=[("readonly", "white")],
+                  selectbackground=[("readonly", "white")],
+                  selectforeground=[("readonly", INK)])
+        style.configure("Primary.TButton", font=("Segoe UI Semibold", 11), padding=13,
                         background=ACCENT, foreground="white", borderwidth=0)
-        style.map("Primary.TButton", background=[("active", "#116448"), ("disabled", "#a3b9b2")])
-        style.configure("Secondary.TButton", font=("Segoe UI", 10), padding=9,
-                        background="#e6edf3", foreground=INK, borderwidth=0)
+        style.map("Primary.TButton", background=[("active", "#116448"), ("disabled", "#a3b9b2")],
+                  foreground=[("disabled", "#f4f7f6")])
+        style.configure("Secondary.TButton", font=("Segoe UI Semibold", 9), padding=9,
+                        background="#edf2f6", foreground=INK, borderwidth=0)
+        style.map("Secondary.TButton", background=[("active", "#dce6ed"), ("disabled", "#f1f3f5")])
         style.configure("Green.Horizontal.TProgressbar", background=ACCENT,
                         troughcolor="#e6edf3", borderwidth=0)
         viewport = tk.Frame(root, bg=BG)
@@ -74,10 +88,11 @@ class CarApp:
         self.canvas.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y")
         self.canvas.pack(side="left", fill="both", expand=True)
-        outer = tk.Frame(self.canvas, bg=BG, padx=28, pady=16)
+        outer = tk.Frame(self.canvas, bg=BG, padx=28, pady=24)
         content = self.canvas.create_window((0, 0), window=outer, anchor="nw")
         outer.bind("<Configure>", lambda event: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-        self.canvas.bind("<Configure>", lambda event: self.canvas.itemconfigure(content, width=event.width))
+        self.content_window = content
+        self.canvas.bind("<Configure>", self.resize_content)
         root.bind_all("<MouseWheel>", self.scroll_wheel, add="+")
         header = tk.Frame(outer, bg=BG)
         header.pack(fill="x")
@@ -87,12 +102,15 @@ class CarApp:
         selector.pack(side="right")
         selector.bind("<<ComboboxSelected>>", self.change_language)
         self.localized_label(header, "brand", 10, ACCENT, True).pack(side="left")
-        self.localized_label(outer, "title", 24, INK, True).pack(anchor="w", pady=(5, 4))
-        self.localized_label(outer, "intro", 10, MUTED).pack(anchor="w")
+        self.localized_label(outer, "title", 27, INK, True).pack(anchor="w", pady=(24, 5))
+        self.localized_label(outer, "intro", 11, MUTED).pack(anchor="w", pady=(0, 18))
 
-        card = tk.Frame(outer, bg="white", padx=22, pady=14)
-        card.pack(fill="x", pady=(14, 12))
-        fields = tk.Frame(card, bg="white")
+        card = tk.Frame(outer, bg=CARD, padx=24, pady=20,
+                        highlightbackground=LINE, highlightthickness=1)
+        card.pack(fill="x", pady=(0, 12))
+        self.localized_label(card, "coordinates_heading", 13, INK, True).pack(anchor="w")
+        self.localized_label(card, "coordinates_intro", 10, MUTED).pack(anchor="w", pady=(4, 17))
+        fields = tk.Frame(card, bg=CARD)
         fields.pack(fill="x")
         fields.columnconfigure((0, 1), weight=1)
         self.latitude = tk.StringVar()
@@ -102,51 +120,61 @@ class CarApp:
             ("latitude", self.latitude, "south"),
             ("longitude", self.longitude, "west"),
         ]):
-            frame = tk.Frame(fields, bg="white")
+            frame = tk.Frame(fields, bg=CARD)
             frame.grid(row=0, column=column, sticky="ew", padx=(0, 8) if column == 0 else (8, 0))
-            self.localized_label(frame, title, 10, INK, True).pack(anchor="w", pady=(0, 7))
+            self.localized_label(frame, title, 10, INK, True).pack(anchor="w", pady=(0, 6))
             entry = ttk.Entry(frame, textvariable=variable, width=20)
             entry.pack(fill="x")
             self.entries.append(entry)
-            self.localized_label(frame, hint, 9, MUTED).pack(anchor="w", pady=(5, 0))
-        actions = tk.Frame(card, bg="white")
-        actions.pack(fill="x", pady=(10, 10))
+            self.localized_label(frame, hint, 9, MUTED).pack(anchor="w", pady=(6, 0))
+        actions = tk.Frame(card, bg=CARD)
+        actions.pack(fill="x", pady=(17, 0))
         self.example = ttk.Button(actions, text="Use sample coordinates", style="Secondary.TButton", command=self.fill_sample)
         self.example.pack(side="left")
-        self.report_button = ttk.Button(actions, style="Secondary.TButton", command=self.open_report, state="disabled")
-        self.report_button.pack(side="right")
-        self.translated_widgets.append((self.report_button, "statement"))
-        self.start_button = ttk.Button(card, text="Find property", style="Primary.TButton", command=self.start)
-        self.start_button.pack(fill="x")
+        self.start_button = ttk.Button(actions, text="Find property", style="Primary.TButton", command=self.start)
+        self.start_button.pack(side="right")
         self.translated_widgets.extend([(self.example, "sample"), (self.start_button, "find")])
         self.error = self.label(card, "", 9, "#b23d3d")
-        self.error.configure(wraplength=500, justify="left")
-        self.error.pack(anchor="w", pady=(7, 0))
-        self.download_button = ttk.Button(card, style="Secondary.TButton", command=self.save_zip, state="disabled")
-        self.download_button.pack(fill="x", pady=(6, 0))
-        self.translated_widgets.append((self.download_button, "download_zip"))
-        self.download_status = self.label(card, "", 9, MUTED)
-        self.download_status.pack(anchor="w")
-        self.candidate_title = self.label(card, "", 9, MUTED)
-        self.candidate_title.pack(anchor="w")
-        self.candidate_choice = ttk.Combobox(card, state="disabled", width=55)
-        self.candidate_choice.pack(fill="x", pady=(3, 0))
-        self.candidate_choice.bind("<<ComboboxSelected>>", self.select_candidate)
-        self.candidate_details = self.label(card, "", 9, INK)
-        self.candidate_details.configure(wraplength=500, justify="left")
-        self.candidate_details.pack(anchor="w")
+        self.error.configure(wraplength=700, justify="left")
+        self.error.pack(anchor="w", fill="x", pady=(8, 0))
 
-        status_card = tk.Frame(outer, bg="white", padx=22, pady=12)
-        status_card.pack(fill="both", expand=True)
-        status_header = tk.Frame(status_card, bg="white")
+        status_card = tk.Frame(outer, bg=CARD, padx=24, pady=18,
+                               highlightbackground=LINE, highlightthickness=1)
+        status_card.pack(fill="x", pady=(0, 12))
+        status_header = tk.Frame(status_card, bg=CARD)
         status_header.pack(fill="x")
+        self.localized_label(status_header, "progress_heading", 11, MUTED, True).pack(side="left")
         self.cancel_button = ttk.Button(status_header, text="Cancel", style="Secondary.TButton", command=self.cancel, state="disabled")
-        self.cancel_button.pack(side="right", padx=(10, 0))
-        self.status = self.label(status_header, "Ready when you are", 11, INK, True)
-        self.status.pack(side="left", anchor="w")
-        self.status.configure(wraplength=320, justify="left")
+        self.cancel_button.pack(side="right")
+        self.status = self.label(status_card, "Ready when you are", 11, INK, True)
+        self.status.pack(anchor="w", fill="x", pady=(9, 0))
+        self.status.configure(wraplength=700, justify="left")
         self.progress = ttk.Progressbar(status_card, mode="determinate", style="Green.Horizontal.TProgressbar")
-        self.progress.pack(fill="x", pady=(13, 14))
+        self.progress.pack(fill="x", pady=(14, 0))
+
+        result_card = tk.Frame(outer, bg=CARD, padx=24, pady=18,
+                               highlightbackground=LINE, highlightthickness=1)
+        result_card.pack(fill="x")
+        self.localized_label(result_card, "results_heading", 13, INK, True).pack(anchor="w")
+        self.candidate_title = self.label(result_card, "", 9, MUTED)
+        self.candidate_title.configure(wraplength=700, justify="left")
+        self.candidate_title.pack(anchor="w", fill="x", pady=(5, 10))
+        self.candidate_choice = ttk.Combobox(result_card, state="disabled", width=55)
+        self.candidate_choice.pack(fill="x")
+        self.candidate_choice.bind("<<ComboboxSelected>>", self.select_candidate)
+        self.candidate_details = self.label(result_card, "", 10, INK)
+        self.candidate_details.configure(wraplength=700, justify="left")
+        self.candidate_details.pack(anchor="w", fill="x", pady=(10, 8))
+        result_actions = tk.Frame(result_card, bg=CARD)
+        result_actions.pack(fill="x", pady=(4, 0))
+        self.report_button = ttk.Button(result_actions, style="Secondary.TButton", command=self.open_report, state="disabled")
+        self.report_button.pack(side="left")
+        self.download_button = ttk.Button(result_actions, style="Secondary.TButton", command=self.save_zip, state="disabled")
+        self.download_button.pack(side="right")
+        self.translated_widgets.extend([(self.report_button, "statement"),
+                                        (self.download_button, "download_zip")])
+        self.download_status = self.label(result_card, "", 9, MUTED)
+        self.download_status.pack(anchor="w", fill="x", pady=(7, 0))
         root.bind("<Return>", lambda event: self.start() if not self.busy else None)
         root.after(100, self.poll)
         self.entries[0].focus_set()
@@ -154,6 +182,24 @@ class CarApp:
 
     def tr(self, key):
         return TEXT[self.language][key]
+
+    def resize_content(self, event):
+        width = min(event.width, MAX_CONTENT_WIDTH)
+        self.canvas.itemconfigure(self.content_window, width=width)
+        self.canvas.coords(self.content_window, (event.width - width) / 2, 0)
+        wraplength = max(240, width - 100)
+        for widget in (self.error, self.status, self.candidate_title, self.candidate_details):
+            widget.configure(wraplength=wraplength)
+        if width < 620:
+            self.example.pack_configure(side="top", fill="x", pady=(0, 8))
+            self.start_button.pack_configure(side="top", fill="x")
+            self.report_button.pack_configure(side="top", fill="x", pady=(0, 7))
+            self.download_button.pack_configure(side="top", fill="x", pady=0)
+        else:
+            self.example.pack_configure(side="left", fill="none", pady=0)
+            self.start_button.pack_configure(side="right", fill="none")
+            self.report_button.pack_configure(side="left", fill="none", pady=0)
+            self.download_button.pack_configure(side="right", fill="none", pady=0)
 
     def scroll_wheel(self, event):
         # Do not intercept mouse wheel events in combobox popups or other windows.

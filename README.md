@@ -39,9 +39,11 @@ You only need to run setup once. Use `start_gui.bat` for future sessions.
 
 To search again, enter new coordinates and select **Find property**. You can cancel an active search with **Cancel**. The window opens maximized, can be resized, and supports scrolling.
 
+The desktop interface separates coordinate entry, search progress, and property results into distinct panels. On narrow windows, action buttons stack to stay easy to use.
+
 ## Understanding the results
 
-The app queries the CAR coordinate service five times and checks the boundaries of the distinct properties returned. Repeated requests may return different properties, and five requests **do not guarantee that every property at the location will be found**. If some requests or boundary checks fail, results may be incomplete. Boundary distances are approximate; review the registration and property details before using the result.
+The app queries the CAR coordinate service ten times and checks the boundaries of the distinct properties returned. Repeated requests may return different properties, and ten requests **do not guarantee that every property at the location will be found**. If some requests or boundary checks fail, results may be incomplete. Boundary distances are approximate; review the registration and property details before using the result.
 
 ## Troubleshooting
 

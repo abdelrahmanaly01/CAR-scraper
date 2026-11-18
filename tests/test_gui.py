@@ -128,6 +128,8 @@ class GuiTests(unittest.TestCase):
         top, bottom = self.app.canvas.yview()
         self.assertGreater(top, 0)
         self.assertAlmostEqual(bottom, 1.0, places=2)
+        self.assertEqual(self.app.example.pack_info()["side"], "top")
+        self.assertEqual(self.app.start_button.pack_info()["fill"], "x")
 
     def test_selecting_candidate_controls_download_identity(self):
         self.app.candidates = [

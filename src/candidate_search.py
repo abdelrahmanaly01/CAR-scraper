@@ -53,7 +53,7 @@ def check_boundary(data, longitude, latitude):
     return inside_any, round(distance)
 
 
-def search_candidates(latitude, longitude, progress=lambda *a: None, attempts=5):
+def search_candidates(latitude, longitude, progress=lambda *a: None, attempts=10):
     candidates = {}
     failures = []
     params = urllib.parse.urlencode({'lat':latitude,'lng':longitude})
