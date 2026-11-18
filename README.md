@@ -7,7 +7,7 @@ A Windows application for finding CAR properties by latitude and longitude, chec
 - Windows 10 or 11
 - Python 3.10 or newer. During installation, select **Add Python to PATH**.
 - An internet connection
-- Google Chrome, if you want to open a property statement
+- A default web browser, if you want to open a property statement
 
 ## Setup
 
@@ -35,7 +35,7 @@ You only need to run setup once. Use `start_gui.bat` for future sessions.
    - **Point outside boundary**: the point is outside it. The displayed distance is approximately how far it is from the nearest boundary.
    - **Boundary could not be checked**: the boundary was unavailable or could not be read, so the result is unverified.
 6. For the selected property, choose **Download ZIP**, select a save location, and wait for the confirmation. The application checks the ZIP before saving it.
-7. Choose **Open statement in Chrome** to open the selected property's statement page in your regular Chrome browser. This opens a web page; it does not automatically save a PDF.
+7. Choose **Open statement** to open the selected property's statement page in your default web browser. This opens a web page; it does not automatically save a PDF.
 
 To search again, enter new coordinates and select **Find property**. You can cancel an active search with **Cancel**. The window opens maximized, can be resized, and supports scrolling.
 
@@ -51,7 +51,7 @@ The app queries the CAR coordinate service ten times and checks the boundaries o
 - **No results or incomplete results:** Check the coordinates and connection, then try again. The CAR service may be unavailable or may not return a property for the point.
 - **Boundary could not be checked:** Try again later. Do not assume an unverified property contains the point.
 - **ZIP download fails:** Check the internet connection and save location. If the error mentions certificate verification, contact your network or system administrator; do not disable certificate verification.
-- **Statement does not open:** Make sure Google Chrome is installed.
+- **Statement does not open:** Make sure a web browser is installed and set as your system's default browser.
 
 ## Command-line option
 
