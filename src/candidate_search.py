@@ -7,6 +7,7 @@ import urllib.parse
 import urllib.request
 import zipfile
 from .car_api import BASE_URL, normalize_registration
+from .network import create_ssl_context
 
 
 def check_boundary(data, longitude, latitude):
@@ -56,10 +57,15 @@ def search_candidates(latitude, longitude, progress=lambda *a: None, attempts=5)
     candidates = {}
     failures = []
     params = urllib.parse.urlencode({'lat':latitude,'lng':longitude})
+    ssl_context = create_ssl_context()
     for i in range(attempts):
         progress(i + 1, attempts)
         try:
-            with urllib.request.urlopen(BASE_URL + '/api/totalizer/getDetailsByCoordinates?' + params, timeout=30) as r:
+            with urllib.request.urlopen(
+                BASE_URL + '/api/totalizer/getDetailsByCoordinates?' + params,
+                timeout=30,
+                context=ssl_context,
+            ) as r:
                 p = json.load(r)
             code = normalize_registration(p.get('codeProperty'))
             origin = p.get('idOrigin')
@@ -71,7 +77,11 @@ def search_candidates(latitude, longitude, progress=lambda *a: None, attempts=5)
             failures.append(str(e))
     for item in candidates.values():
         try:
-            with urllib.request.urlopen(BASE_URL + '/api/downloadBase/getShapeByIdOrigin/' + str(item['id_origin']), timeout=60) as r:
+            with urllib.request.urlopen(
+                BASE_URL + '/api/downloadBase/getShapeByIdOrigin/' + str(item['id_origin']),
+                timeout=60,
+                context=ssl_context,
+            ) as r:
                 data=r.read(30 * 1024 * 1024 + 1)
             if len(data)>30*1024*1024:
                 raise ValueError('Boundary archive too large')

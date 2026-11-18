@@ -6,6 +6,7 @@ import urllib.request
 import zipfile
 
 from .car_api import BASE_URL
+from .network import create_ssl_context
 
 
 def download_zip(id_origin, destination, progress=lambda received, total: None):
@@ -15,7 +16,7 @@ def download_zip(id_origin, destination, progress=lambda received, total: None):
     temporary = None
     try:
         url = f'{BASE_URL}/api/downloadBase/getShapeByIdOrigin/{id_origin}'
-        with urllib.request.urlopen(url, timeout=60) as response:
+        with urllib.request.urlopen(url, timeout=60, context=create_ssl_context()) as response:
             if response.status != 200:
                 raise RuntimeError(f'Download returned HTTP {response.status}.')
             total = int(response.headers.get('Content-Length') or 0)
